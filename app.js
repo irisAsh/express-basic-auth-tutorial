@@ -45,7 +45,6 @@ app.use('/*', function (req, res, next) {
     next();
   } else {
     var authorization = req.headers["authorization"] || "";
-    console.log(req.headers)
     if (judgeAllowedUse(authorization)) {
       next();
     } else {
