@@ -48,7 +48,6 @@ app.use('/*', function (req, res, next) {
     if (judgeAllowedUse(authorization)) {
       next();
     } else {
-      judgeAllowedUse(authorization)
       res.setHeader('WWW-Authenticate', 'Basic realm="tutorial"');
       next(createError(401));
     }
