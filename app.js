@@ -20,19 +20,49 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Basic Auth
+var allowedUsers = {
+  "Express": "is good"
+}
+var judgeAllowedUse = function(authorization) {
+  if (!authorization || !authorization.startsWith("Basic")) {
+    return false;
+  }
+  var encodedPassword = authorization.substring(6);
+  var decodedPassword = Buffer(encodedPassword, 'base64').toString('binary');
+  var colonIndex = decodedPassword.indexOf(':');
+  var username = decodedPassword.slice(0, colonIndex);
+  var password = decodedPassword.substring(colonIndex + 1);
+  if (!!allowedUsers[username] && allowedUsers[username] === password) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 app.use('/*', function (req, res, next) {
-  console.log(req.originalUrl)
   if (req.originalUrl === '/about' || req.originalUrl === '/') {
     next();
   } else {
-    res.setHeader('WWW-Authenticate', 'Basic realm="tutorial"');
-    next(createError(401));
+    var authorization = req.headers["authorization"] || "";
+    console.log(req.headers)
+    if (judgeAllowedUse(authorization)) {
+      next();
+    } else {
+      judgeAllowedUse(authorization)
+      res.setHeader('WWW-Authenticate', 'Basic realm="tutorial"');
+      next(createError(401));
+    }
   }
 });
 
 app.use('/', indexRouter);
 app.use('/tutorial', tutorialsRouter);
 app.use('/about', aboutRouter);
+app.get('/logout', function (req, res) {
+  res.set('WWW-Authenticate', 'Basic realm="tutorial"');
+  return res.sendStatus(401);
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
