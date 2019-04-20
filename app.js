@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var basicAuth = require('basic-auth')
 
 var indexRouter = require('./routes/index');
 var tutorialsRouter = require('./routes/tutorials');
@@ -24,28 +25,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 var allowedUsers = {
   "Express": "is good"
 }
-var judgeAllowedUse = function(authorization) {
-  if (!authorization || !authorization.startsWith("Basic")) {
+var judgeAllowedUse = function(credentials) {
+  if (!credentials) {
     return false;
   }
-  var encodedPassword = authorization.substring(6);
-  var decodedPassword = Buffer(encodedPassword, 'base64').toString('binary');
-  var colonIndex = decodedPassword.indexOf(':');
-  var username = decodedPassword.slice(0, colonIndex);
-  var password = decodedPassword.substring(colonIndex + 1);
-  if (!!allowedUsers[username] && allowedUsers[username] === password) {
-    return true;
-  } else {
-    return false;
-  }
+  var username = credentials.name;
+  var password = credentials.pass;
+  var valid = true
+  valid = !!allowedUsers[username] && allowedUsers[username] === password && valid;
+  return valid;
 }
 
 app.use('/*', function (req, res, next) {
   if (req.originalUrl === '/about' || req.originalUrl === '/') {
     next();
   } else {
-    var authorization = req.headers["authorization"] || "";
-    if (judgeAllowedUse(authorization)) {
+    var credentials = basicAuth(req);
+    if (judgeAllowedUse(credentials)) {
       next();
     } else {
       res.setHeader('WWW-Authenticate', 'Basic realm="tutorial"');

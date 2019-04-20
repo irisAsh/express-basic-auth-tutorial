@@ -7,6 +7,7 @@
     "debug-start": "DEBUG=express-basic-auth-tutorial:* npm start"
   },
   "dependencies": {
+    "basic-auth": "^2.0.1",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "express": "~4.16.0",
